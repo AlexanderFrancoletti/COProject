@@ -340,14 +340,14 @@ void iplc_sim_push_pipeline_stage()
     
     /* 2. Check for BRANCH and correct/incorrect Branch Prediction */
     if (pipeline[DECODE].itype == BRANCH) {
-        int branch_taken = 0;
+        int branch_taken = (pipeline[DECODE].stage.branch.reg1 == pipeline[DECODE].stage.branch.reg2);
 
         branch_count++;
 
-        if(pipeline[DECODE].stage.branch.reg1 == pipeline[DECODE].stage.branch.reg2 && branch_predict_taken){
+        if(branch_taken && branch_predict_taken == 1){
             correct_branch_predictions++;
         }
-        else if(pipeline[DECODE].stage.branch.reg1 != pipeline[DECODE].stage.branch.reg2 && !branch_predict_taken){
+        else if(!branch_taken && branch_predict_taken == 0){
             correct_branch_predictions++;
         }
     }
@@ -363,7 +363,6 @@ void iplc_sim_push_pipeline_stage()
         if(pipeline[ALU].itype != NOP || !hit){ //If the ALU is full
             pipeline_cycles += 10;
         }
-
 
     }
     
