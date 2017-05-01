@@ -36,7 +36,7 @@ void iplc_sim_process_pipeline_nop();
 
 // Outout performance results
 void iplc_sim_finalize();
-
+//make it include numerous blocks
 typedef struct cache_line
 {
     // Your data structures for implementing your cache should include:
@@ -44,6 +44,9 @@ typedef struct cache_line
     // a tag
     // a method for handling varying levels of associativity
     // a method for selecting which item in the cache is going to be replaced
+    int valid;
+    int tag;
+    int time;
 } cache_line_t;
 
 cache_line_t *cache=NULL;
@@ -163,10 +166,12 @@ void iplc_sim_init(int index, int blocksize, int assoc)
         exit(-1);
     }
     
-    cache = (cache_line_t *) malloc((sizeof(cache_line_t) * 1<<index));
+    cache = (cache_line_t *) malloc((sizeof(cache_line_t) * 1<<index * cache_assoc));
     
     // Dynamically create our cache based on the information the user entered
-    for (i = 0; i < (1<<index); i++) {
+    for (i = 0; i < (1<<index * cache_assoc); i++) {
+        cache[i].valid = 0;
+        cache[i].time = 0;
     }
     
     // init the pipeline -- set all data to zero and instructions to NOP
@@ -176,12 +181,38 @@ void iplc_sim_init(int index, int blocksize, int assoc)
     }
 }
 
+void update(){
+    for(int i = 0; i < (1 << cache_index * cache_assoc); i++){
+        if(cache[i].time != 0)
+            cache[i].time++;
+    }
+}
 /*
  * iplc_sim_trap_address() determined this is not in our cache.  Put it there
  * and make sure that is now our Most Recently Used (MRU) entry.
  */
 void iplc_sim_LRU_replace_on_miss(int index, int tag)
 {
+    int counter = 0;
+    cache_miss++;
+    for(int i = index; i < index + cache_assoc; i++){
+        if(cache[i].valid == 0){
+            cache[i].time = 1;
+            cache[i].tag = tag;
+            cache[i].valid = 1;
+            counter++;
+            break;
+        }
+    }
+    if(counter == 0){
+        counter = index;
+        for(int i = index; i < index + cache_assoc; i++){
+            if(cache[i].time > cache[counter].time)
+                counter = i;
+        }
+        cache[counter].time = 1;
+        cache[counter].tag = tag;
+    }
     /* You must implement this function */
 }
 
@@ -191,6 +222,8 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
  */
 void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
 {
+    cache[index + assoc_entry].time = 1;
+    cache_hit++;
     /* You must implement this function */
 }
 
@@ -207,7 +240,21 @@ int iplc_sim_trap_address(unsigned int address)
     int hit=0;
     
     // Call the appropriate function for a miss or hit
-
+    cache_access++;
+    update();
+    index = (address >> cache_blockoffsetbits) & (1 << cache_index);
+    index *= cache_assoc;
+    tag = (address >> (cache_blockoffsetbits + index));
+    for(i = index; i < (index + cache_assoc); i++){
+        if(cache[i].tag == tag){
+            iplc_sim_LRU_update_on_hit(index, i);
+            hit++;
+            break;
+        }
+    }
+    if(hit == 0){
+        iplc_sim_LRU_replace_on_miss(index, tag);
+    }
     /* expects you to return 1 for hit, 0 for miss */
     return hit;
 }
@@ -294,6 +341,8 @@ void iplc_sim_push_pipeline_stage()
     /* 2. Check for BRANCH and correct/incorrect Branch Prediction */
     if (pipeline[DECODE].itype == BRANCH) {
         int branch_taken = 0;
+
+        branch_count++;
 
         if(pipeline[DECODE].stage.branch.reg1 == pipeline[DECODE].stage.branch.reg2 && branch_predict_taken){
             correct_branch_predictions++;
