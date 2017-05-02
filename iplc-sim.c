@@ -242,14 +242,16 @@ int iplc_sim_trap_address(unsigned int address)
     // Call the appropriate function for a miss or hit
     cache_access++;
     update();
-    index = (address >> cache_blockoffsetbits) & (1 << cache_index);
+    index = (address >> cache_blockoffsetbits) & ((1 << cache_index) - 1);
     index *= cache_assoc;
-    tag = (address >> (cache_blockoffsetbits + index));
+    //tag = (address >> (cache_blockoffsetbits + index));
+    tag = address;
+    tag >>= cache_blockoffsetbits;
+    tag >>= cache_index;
     for(i = index; i < (index + cache_assoc); i++){
         if(cache[i].tag == tag){
             iplc_sim_LRU_update_on_hit(index, i);
             hit++;
-            break;
         }
     }
     if(hit == 0){
@@ -340,15 +342,16 @@ void iplc_sim_push_pipeline_stage()
     
     /* 2. Check for BRANCH and correct/incorrect Branch Prediction */
     if (pipeline[DECODE].itype == BRANCH) {
-        int branch_taken = (pipeline[DECODE].stage.branch.reg1 == pipeline[DECODE].stage.branch.reg2);
+        int branch_taken = 0;
 
         branch_count++;
 
-        if(branch_taken && branch_predict_taken == 1){
-            correct_branch_predictions++;
-        }
-        else if(!branch_taken && branch_predict_taken == 0){
-            correct_branch_predictions++;
+        if(branch_predict_taken == 0){
+            if(pipeline[DECODE].stage.branch.reg1 != pipeline[DECODE].stage.branch.reg2)
+                correct_branch_predictions++;
+        } else {
+            if(pipeline[DECODE].stage.branch.reg1 == pipeline[DECODE].stage.branch.reg2)
+                correct_branch_predictions++;
         }
     }
     
@@ -360,9 +363,10 @@ void iplc_sim_push_pipeline_stage()
         
         int hit = iplc_sim_trap_address(pipeline[MEM].instruction_address);
 
-        if(pipeline[ALU].itype != NOP || !hit){ //If the ALU is full
+        if(!hit){ //If the ALU is full
             pipeline_cycles += 10;
         }
+
 
     }
     
@@ -417,8 +421,8 @@ void iplc_sim_process_pipeline_lw(int dest_reg, int base_reg, unsigned int data_
 
     /*
     unsigned int data_address;
-    int dest_reg;
-    int base_reg;
+    int dest_reg;    int base_reg;
+
     */
 
     pipeline[FETCH].stage.lw.data_address = data_address;
