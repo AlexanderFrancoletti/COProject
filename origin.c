@@ -292,6 +292,7 @@ void iplc_sim_finalize()
 void iplc_sim_dump_pipeline()
 {
     int i;
+    
     for (i = 0; i < MAX_STAGES; i++) {
         switch(i) {
             case FETCH:
@@ -322,8 +323,8 @@ void iplc_sim_dump_pipeline()
  */
 void iplc_sim_push_pipeline_stage()
 {
-    //int i;
-    //int data_hit=1;
+    int i;
+    int data_hit=1;
     
     /* 1. Count WRITEBACK stage is "retired" -- This I'm giving you */
     if (pipeline[WRITEBACK].instruction_address) {
@@ -353,7 +354,7 @@ void iplc_sim_push_pipeline_stage()
      *    add delay cycles if needed.
      */
     if (pipeline[MEM].itype == LW) {
-        //int inserted_nop = 0;
+        int inserted_nop = 0;
         
         int hit = iplc_sim_trap_address(pipeline[MEM].stage.lw.data_address);
 
@@ -534,14 +535,14 @@ void iplc_sim_parse_instruction(char *buffer)
         // need to subtract 1, since the stage is pushed once more for actual instruction processing
         // also need to allow for a branch miss prediction during the fetch cache miss time -- by
         // counting cycles this allows for these cycles to overlap and not doubly count.
-    
+        
         printf("INST MISS:\t Address 0x%x \n", instruction_address);
         
         for (i = pipeline_cycles, j = pipeline_cycles; i < j + CACHE_MISS_DELAY - 1; i++)
             iplc_sim_push_pipeline_stage();
     }
     else
-            printf("INST HIT:\t Address 0x%x \n", instruction_address);
+        printf("INST HIT:\t Address 0x%x \n", instruction_address);
     
     // Parse the Instruction
     
@@ -554,7 +555,8 @@ void iplc_sim_parse_instruction(char *buffer)
                    str_dest_reg,
                    str_src_reg,
                    str_src_reg2 ) != 5) {
-            printf("Malformed RTYPE instruction (%s) at address 0x%x \n",instruction, instruction_address);
+            printf("Malformed RTYPE instruction (%s) at address 0x%x \n",
+                   instruction, instruction_address);
             exit(-1);
         }
         
@@ -571,7 +573,8 @@ void iplc_sim_parse_instruction(char *buffer)
                    instruction,
                    str_dest_reg,
                    str_constant ) != 4 ) {
-            printf("Malformed RTYPE instruction (%s) at address 0x%x \n",instruction, instruction_address );
+            printf("Malformed RTYPE instruction (%s) at address 0x%x \n",
+                   instruction, instruction_address );
             exit(-1);
         }
         
@@ -678,381 +681,3 @@ int main()
     iplc_sim_finalize();
     return 0;
 }
-/*
-CacheSize(index): 7
-
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 0
-Cache Configuration 
-   Index: 7 bits or 128 lines 
-   BlockSize: 1 
-   Associativity: 1 
-   BlockOffSetBits: 2 
-   CacheSize: 7168 
- Cache Performance 
-     Number of Cache Accesses is 35676 
-     Number of Cache Misses is 1113 
-     Number of Cache Hits is 34563 
-     Cache Miss Rate is 0.031197 
-Pipeline Performance 
-     Total Cycles is 45419 
-     Total Instructions is 34129 
-     Total Branch Instructions is 7020 
-     Total Correct Branch Predictions is 5730 
-     CPI is 1.330804 
-
-
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 0
-Cache Configuration 
-   Index: 6 bits or 64 lines 
-   BlockSize: 1 
-   Associativity: 2 
-   BlockOffSetBits: 2 
-   CacheSize: 7296 
- Cache Performance 
-     Number of Cache Accesses is 35780 
-     Number of Cache Misses is 480 
-     Number of Cache Hits is 35300 
-     Cache Miss Rate is 0.013415 
-Pipeline Performance 
-     Total Cycles is 40049 
-     Total Instructions is 34449 
-     Total Branch Instructions is 7031 
-     Total Correct Branch Predictions is 5734 
-     CPI is 1.162559 
-
-
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 0
-Cache Configuration 
-   Index: 5 bits or 32 lines 
-   BlockSize: 1 
-   Associativity: 4 
-   BlockOffSetBits: 2 
-   CacheSize: 7424 
- Cache Performance 
-     Number of Cache Accesses is 35823 
-     Number of Cache Misses is 349 
-     Number of Cache Hits is 35474 
-     Cache Miss Rate is 0.009742 
-Pipeline Performance 
-     Total Cycles is 38975 
-     Total Instructions is 34550 
-     Total Branch Instructions is 7036 
-     Total Correct Branch Predictions is 5744 
-     CPI is 1.128075 
-
-
-2 Word, Direct Mapped
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 0
-Cache Configuration 
-   Index: 6 bits or 64 lines 
-   BlockSize: 2 
-   Associativity: 1 
-   BlockOffSetBits: 3 
-   CacheSize: 5632 
- Cache Performance 
-     Number of Cache Accesses is 35691 
-     Number of Cache Misses is 1027 
-     Number of Cache Hits is 34664 
-     Cache Miss Rate is 0.028775 
-Pipeline Performance 
-     Total Cycles is 44738 
-     Total Instructions is 34212 
-     Total Branch Instructions is 7015 
-     Total Correct Branch Predictions is 5714 
-     CPI is 1.307670 
-
-
-2 Word, 2-Way
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 0
-Cache Configuration 
-   Index: 5 bits or 32 lines 
-   BlockSize: 2 
-   Associativity: 2 
-   BlockOffSetBits: 3 
-   CacheSize: 5696 
- Cache Performance 
-     Number of Cache Accesses is 35793 
-     Number of Cache Misses is 349 
-     Number of Cache Hits is 35444 
-     Cache Miss Rate is 0.009751 
-
-Pipeline Performance 
-     Total Cycles is 38982 
-     Total Instructions is 34551 
-     Total Branch Instructions is 7042 
-     Total Correct Branch Predictions is 5734 
-     CPI is 1.128245
-
-
-2 Word, 4-Way
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 0
-Cache Configuration 
-   Index: 4 bits or 16 lines 
-   BlockSize: 2 
-   Associativity: 4 
-   BlockOffSetBits: 3 
-   CacheSize: 5760 
- Cache Performance 
-     Number of Cache Accesses is 35841 
-     Number of Cache Misses is 197 
-     Number of Cache Hits is 35644 
-     Cache Miss Rate is 0.005496 
-
-Pipeline Performance 
-     Total Cycles is 37710 
-     Total Instructions is 34647 
-     Total Branch Instructions is 7042 
-     Total Correct Branch Predictions is 5744 
-     CPI is 1.088406 
-
-
-4 Word, Direct Mapped
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 0
-Cache Configuration 
-   Index: 6 bits or 64 lines 
-   BlockSize: 4 
-   Associativity: 1 
-   BlockOffSetBits: 4 
-   CacheSize: 9664 
- Cache Performance 
-     Number of Cache Accesses is 35835 
-     Number of Cache Misses is 750 
-     Number of Cache Hits is 35085 
-     Cache Miss Rate is 0.020929 
-
-Pipeline Performance 
-     Total Cycles is 42396 
-     Total Instructions is 34362 
-     Total Branch Instructions is 6997 
-     Total Correct Branch Predictions is 5689 
-     CPI is 1.233805 
-
-
-4 Word, 2-Way
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 0
-Cache Configuration 
-   Index: 5 bits or 32 lines 
-   BlockSize: 4 
-   Associativity: 2 
-   BlockOffSetBits: 4 
-   CacheSize: 9728 
- Cache Performance 
-     Number of Cache Accesses is 35855 
-     Number of Cache Misses is 144 
-     Number of Cache Hits is 35711 
-     Cache Miss Rate is 0.004016 
-Pipeline Performance 
-     Total Cycles is 37268 
-     Total Instructions is 34681 
-     Total Branch Instructions is 7043 
-     Total Correct Branch Predictions is 5748 
-     CPI is 1.074594 
-
-
-4 Word, 4-Way
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 0
-Cache Configuration 
-   Index: 4 bits or 16 lines 
-   BlockSize: 4 
-   Associativity: 4 
-   BlockOffSetBits: 4 
-   CacheSize: 9792 
- Cache Performance 
-     Number of Cache Accesses is 35855 
-     Number of Cache Misses is 78 
-     Number of Cache Hits is 35777 
-     Cache Miss Rate is 0.002175 
-Pipeline Performance 
-     Total Cycles is 36694 
-     Total Instructions is 34701 
-     Total Branch Instructions is 7043 
-     Total Correct Branch Predictions is 5748 
-     CPI is 1.057434 
-
-
-NOT Taken: 1
-1 Word, Direct Mapped
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 1
-Cache Configuration 
-   Index: 7 bits or 128 lines 
-   BlockSize: 1 
-   Associativity: 1 
-   BlockOffSetBits: 2 
-   CacheSize: 7168 
- Cache Performance 
-     Number of Cache Accesses is 35676 
-     Number of Cache Misses is 1113 
-     Number of Cache Hits is 34563 
-     Cache Miss Rate is 0.031197 
-Pipeline Performance 
-     Total Cycles is 49876 
-     Total Instructions is 34129 
-     Total Branch Instructions is 7020 
-     Total Correct Branch Predictions is 1273 
-     CPI is 1.461396 
-
-1 Word, 2-Way
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 1
-Cache Configuration 
-   Index: 6 bits or 64 lines 
-   BlockSize: 1 
-   Associativity: 2 
-   BlockOffSetBits: 2 
-   CacheSize: 7296 
- Cache Performance 
-     Number of Cache Accesses is 35780 
-     Number of Cache Misses is 480 
-     Number of Cache Hits is 35300 
-     Cache Miss Rate is 0.013415 
-Pipeline Performance 
-     Total Cycles is 44503 
-     Total Instructions is 34449 
-     Total Branch Instructions is 7031 
-     Total Correct Branch Predictions is 1280 
-     CPI is 1.291852
-
-1 Word, 4-Way
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 1
-Cache Configuration 
-   Index: 5 bits or 32 lines 
-   BlockSize: 1 
-   Associativity: 4 
-   BlockOffSetBits: 2 
-   CacheSize: 7424 
- Cache Performance 
-     Number of Cache Accesses is 35823 
-     Number of Cache Misses is 349 
-     Number of Cache Hits is 35474 
-     Cache Miss Rate is 0.009742 
-Pipeline Performance 
-     Total Cycles is 43435 
-     Total Instructions is 34550 
-     Total Branch Instructions is 7036 
-     Total Correct Branch Predictions is 1284 
-     CPI is 1.257164 
-
-
-2 Word, Direct Mapped
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 1
-Cache Configuration 
-   Index: 6 bits or 64 lines 
-   BlockSize: 2 
-   Associativity: 1 
-   BlockOffSetBits: 3 
-   CacheSize: 5632 
- Cache Performance 
-     Number of Cache Accesses is 35691 
-     Number of Cache Misses is 1027 
-     Number of Cache Hits is 34664 
-     Cache Miss Rate is 0.028775 
-Pipeline Performance 
-     Total Cycles is 49169 
-     Total Instructions is 34212 
-     Total Branch Instructions is 7015 
-     Total Correct Branch Predictions is 1283 
-     CPI is 1.437186 
-
-2 Word, 2-Way
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 1
-Cache Configuration 
-   Index: 5 bits or 32 lines 
-   BlockSize: 2 
-   Associativity: 2 
-   BlockOffSetBits: 3 
-   CacheSize: 5696 
- Cache Performance 
-     Number of Cache Accesses is 35793 
-     Number of Cache Misses is 349 
-     Number of Cache Hits is 35444 
-     Cache Miss Rate is 0.009751 
-Pipeline Performance 
-     Total Cycles is 43426 
-     Total Instructions is 34551 
-     Total Branch Instructions is 7042 
-     Total Correct Branch Predictions is 1290 
-     CPI is 1.256867 
-
-2 Word, 4-Way
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 1
-Cache Configuration 
-   Index: 4 bits or 16 lines 
-   BlockSize: 2 
-   Associativity: 4 
-   BlockOffSetBits: 3 
-   CacheSize: 5760 
- Cache Performance 
-     Number of Cache Accesses is 35841 
-     Number of Cache Misses is 197 
-     Number of Cache Hits is 35644 
-     Cache Miss Rate is 0.005496 
-Pipeline Performance 
-     Total Cycles is 42164 
-     Total Instructions is 34647 
-     Total Branch Instructions is 7042 
-     Total Correct Branch Predictions is 1290 
-     CPI is 1.216960 
-
-
-4 Word, Direct Mapped
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 1
-Cache Configuration 
-   Index: 6 bits or 64 lines 
-   BlockSize: 4 
-   Associativity: 1 
-   BlockOffSetBits: 4 
-   CacheSize: 9664 
- Cache Performance 
-     Number of Cache Accesses is 35835 
-     Number of Cache Misses is 750 
-     Number of Cache Hits is 35085 
-     Cache Miss Rate is 0.020929 
-Pipeline Performance 
-     Total Cycles is 46801 
-     Total Instructions is 34362 
-     Total Branch Instructions is 6997 
-     Total Correct Branch Predictions is 1284 
-     CPI is 1.361999 
-
-
-
-4 Word, 2-Way
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 1
-Cache Configuration 
-   Index: 5 bits or 32 lines 
-   BlockSize: 4 
-   Associativity: 2 
-   BlockOffSetBits: 4 
-   CacheSize: 9728 
- Cache Performance 
-     Number of Cache Accesses is 35855 
-     Number of Cache Misses is 144 
-     Number of Cache Hits is 35711 
-     Cache Miss Rate is 0.004016 
-Pipeline Performance 
-     Total Cycles is 41725 
-     Total Instructions is 34681 
-     Total Branch Instructions is 7043 
-     Total Correct Branch Predictions is 1291 
-     CPI is 1.203108
-
-
-4 Word, 4-Way
-Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 1
-Cache Configuration 
-   Index: 4 bits or 16 lines 
-   BlockSize: 4 
-   Associativity: 4 
-   BlockOffSetBits: 4 
-   CacheSize: 9792 
- Cache Performance 
-     Number of Cache Accesses is 35855 
-     Number of Cache Misses is 78 
-     Number of Cache Hits is 35777 
-     Cache Miss Rate is 0.002175 
-Pipeline Performance 
-     Total Cycles is 41151 
-     Total Instructions is 34701 
-     Total Branch Instructions is 7043 
-     Total Correct Branch Predictions is 1291 
-     CPI is 1.185874 
-*/
