@@ -249,7 +249,7 @@ int iplc_sim_trap_address(unsigned int address)
     tag >>= cache_blockoffsetbits;
     tag >>= cache_index;
     for(i = index; i < (index + cache_assoc); i++){
-        if(cache[i].tag == tag){
+        if( (cache[i].tag == tag) && (cache[i].tag != 0) ){
             iplc_sim_LRU_update_on_hit(index, i);
             hit++;
         }
@@ -360,7 +360,7 @@ void iplc_sim_push_pipeline_stage()
         int hit = iplc_sim_trap_address(pipeline[MEM].instruction_address);
 
         if(!hit){ //If the ALU is full
-            pipeline_cycles += 10;
+            pipeline_cycles += 9;
         }
 
 
@@ -371,7 +371,7 @@ void iplc_sim_push_pipeline_stage()
         int hit = iplc_sim_trap_address(pipeline[MEM].instruction_address);
 
         if(!hit){
-            pipeline_cycles += 10;
+            pipeline_cycles += 9;
         }
     }
     
