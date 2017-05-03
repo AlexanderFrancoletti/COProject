@@ -1,6 +1,4 @@
 
-CacheSize(index): 7
-
 1 Word, Direct Mapped
 Enter Branch Prediction: 0 (NOT taken), 1 (TAKEN): 0
 Cache Configuration 
